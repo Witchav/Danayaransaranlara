@@ -1574,9 +1574,420 @@
             .timeline-filters { flex-wrap: wrap; }
             .ai-assistant { width: 320px; }
         }
+        /* ===== LOGIN SCREEN ===== */
+        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&display=swap');
+
+        #loginScreen {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: #030014;
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .login-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        .login-orb-1 {
+            width: 500px; height: 500px;
+            background: radial-gradient(circle, rgba(167,139,250,0.6), transparent 70%);
+            top: -150px; left: -150px;
+            animation: orbFloat1 8s ease-in-out infinite;
+        }
+        .login-orb-2 {
+            width: 400px; height: 400px;
+            background: radial-gradient(circle, rgba(244,114,182,0.5), transparent 70%);
+            bottom: -100px; right: -100px;
+            animation: orbFloat1 8s ease-in-out infinite reverse;
+            animation-delay: -3s;
+        }
+        .login-orb-3 {
+            width: 300px; height: 300px;
+            background: radial-gradient(circle, rgba(45,212,191,0.3), transparent 70%);
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            animation: orbFloat3 10s ease-in-out infinite;
+        }
+        @keyframes orbFloat1 {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(30px, -30px) scale(1.08); }
+        }
+        @keyframes orbFloat3 {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.3); }
+        }
+
+        .login-grid {
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(167,139,250,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(167,139,250,0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+        }
+
+        .login-particle {
+            position: absolute;
+            width: 2px; height: 2px;
+            border-radius: 50%;
+            background: var(--primary);
+            opacity: 0;
+            pointer-events: none;
+            animation: particleDrift linear infinite;
+        }
+        @keyframes particleDrift {
+            0% { transform: translateY(110vh); opacity: 0; }
+            10% { opacity: 0.7; }
+            90% { opacity: 0.7; }
+            100% { transform: translateY(-50px); opacity: 0; }
+        }
+
+        .login-wrapper {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            width: 900px;
+            max-width: 95vw;
+            min-height: 560px;
+            border-radius: 32px;
+            overflow: hidden;
+            box-shadow: 0 60px 120px rgba(0,0,0,0.7), 0 0 0 1px rgba(167,139,250,0.15);
+            animation: loginEntrance 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes loginEntrance {
+            from { opacity: 0; transform: translateY(40px) scale(0.96); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .login-left {
+            flex: 1;
+            background: linear-gradient(145deg, rgba(167,139,250,0.12) 0%, rgba(244,114,182,0.08) 50%, rgba(45,212,191,0.04) 100%);
+            border-right: 1px solid rgba(167,139,250,0.12);
+            padding: 50px 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+        }
+        .login-left::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background:
+                radial-gradient(circle at 30% 40%, rgba(167,139,250,0.15) 0%, transparent 60%),
+                radial-gradient(circle at 70% 80%, rgba(244,114,182,0.1) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .login-brand { position: relative; z-index: 2; }
+        .login-brand-icon {
+            width: 64px; height: 64px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 18px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 28px;
+            margin-bottom: 24px;
+            box-shadow: 0 10px 30px rgba(167,139,250,0.4);
+            animation: float 4s ease-in-out infinite;
+        }
+        .login-brand h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: 42px;
+            font-weight: 800;
+            letter-spacing: 6px;
+            background: linear-gradient(135deg, #fff 0%, var(--primary-light) 50%, var(--secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+            margin-bottom: 10px;
+        }
+        .login-brand p {
+            font-size: 11px;
+            letter-spacing: 3px;
+            color: rgba(148,163,184,0.6);
+            text-transform: uppercase;
+        }
+
+        .login-features { position: relative; z-index: 2; }
+        .login-feature {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 14px;
+            padding: 14px 18px;
+            background: rgba(167,139,250,0.05);
+            border: 1px solid rgba(167,139,250,0.1);
+            border-radius: 16px;
+            transition: all 0.3s ease;
+            animation: featureSlide 0.6s ease backwards;
+        }
+        .login-feature:nth-child(1) { animation-delay: 0.3s; }
+        .login-feature:nth-child(2) { animation-delay: 0.45s; }
+        .login-feature:nth-child(3) { animation-delay: 0.6s; }
+        @keyframes featureSlide {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        .login-feature:hover {
+            background: rgba(167,139,250,0.1);
+            border-color: rgba(167,139,250,0.25);
+            transform: translateX(5px);
+        }
+        .login-feature-icon {
+            width: 36px; height: 36px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px;
+            color: #030014;
+            flex-shrink: 0;
+        }
+        .login-feature span { font-size: 13px; color: rgba(226,232,240,0.75); font-weight: 500; }
+
+        .login-version {
+            position: relative; z-index: 2;
+            font-size: 11px;
+            color: rgba(148,163,184,0.35);
+            letter-spacing: 2px;
+        }
+
+        .login-right {
+            width: 380px;
+            background: rgba(8, 4, 20, 0.97);
+            padding: 50px 45px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+        }
+        .login-right::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--primary), var(--secondary), transparent);
+        }
+
+        .login-right-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 26px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 6px;
+        }
+        .login-right-subtitle {
+            font-size: 13px;
+            color: var(--gray);
+            margin-bottom: 36px;
+            line-height: 1.6;
+        }
+
+        .login-field { position: relative; margin-bottom: 20px; }
+        .login-field label {
+            display: block;
+            font-size: 11px;
+            letter-spacing: 2px;
+            color: rgba(148,163,184,0.6);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+        .login-field-inner { position: relative; }
+        .login-field input {
+            width: 100%;
+            padding: 16px 48px 16px 18px;
+            background: rgba(167,139,250,0.04);
+            border: 1px solid rgba(167,139,250,0.12);
+            border-radius: 14px;
+            color: var(--light);
+            font-size: 15px;
+            transition: all 0.3s ease;
+            letter-spacing: 2px;
+            font-family: 'Syne', sans-serif;
+        }
+        .login-field input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: rgba(167,139,250,0.07);
+            box-shadow: 0 0 0 3px rgba(167,139,250,0.1);
+        }
+        .login-field input::placeholder { color: rgba(148,163,184,0.25); letter-spacing: 1px; font-size: 13px; }
+        .login-field .eye-toggle {
+            position: absolute;
+            right: 16px; top: 50%;
+            transform: translateY(-50%);
+            color: rgba(148,163,184,0.35);
+            cursor: pointer; font-size: 15px;
+            transition: color 0.3s ease;
+        }
+        .login-field .eye-toggle:hover { color: var(--primary); }
+
+        .login-error {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            background: rgba(248,113,113,0.07);
+            border: 1px solid rgba(248,113,113,0.2);
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: var(--danger);
+            font-size: 13px;
+            margin-bottom: 16px;
+        }
+        .login-error.show { display: flex; animation: fadeIn 0.3s ease; }
+
+        .login-btn {
+            width: 100%;
+            padding: 17px;
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary), var(--secondary));
+            background-size: 200% 200%;
+            border: none;
+            border-radius: 14px;
+            color: #030014;
+            font-size: 13px;
+            font-weight: 700;
+            font-family: 'Syne', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            letter-spacing: 3px;
+            margin-top: 4px;
+            position: relative;
+            overflow: hidden;
+            animation: gradientShift 4s ease infinite;
+        }
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        .login-btn-shine {
+            position: absolute;
+            top: 0; left: -100%;
+            width: 60%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transform: skewX(-20deg);
+            transition: left 0.6s ease;
+        }
+        .login-btn:hover .login-btn-shine { left: 150%; }
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(167,139,250,0.4);
+        }
+        .login-btn:active { transform: translateY(0); }
+        .login-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+        .login-discord {
+            margin-top: 28px;
+            text-align: center;
+            font-size: 12px;
+            color: rgba(148,163,184,0.35);
+            letter-spacing: 0.5px;
+        }
+        .login-discord a { color: var(--primary); text-decoration: none; transition: color 0.3s; }
+        .login-discord a:hover { color: var(--secondary); }
+
+        .login-shake { animation: shake 0.5s ease !important; }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-8px); }
+            40% { transform: translateX(8px); }
+            60% { transform: translateX(-5px); }
+            80% { transform: translateX(5px); }
+        }
+
+        #adminPanel { display: none; }
+
+        @media (max-width: 700px) {
+            .login-left { display: none; }
+            .login-wrapper { width: 100%; border-radius: 0; min-height: 100vh; }
+            .login-right { width: 100%; padding: 40px 28px; }
+        }
     </style>
 </head>
 <body>
+    <!-- LOGIN SCREEN -->
+    <div id="loginScreen">
+        <!-- Background effects -->
+        <div class="login-orb login-orb-1"></div>
+        <div class="login-orb login-orb-2"></div>
+        <div class="login-orb login-orb-3"></div>
+        <div class="login-grid"></div>
+        <div id="loginParticles"></div>
+
+        <!-- Main card -->
+        <div class="login-wrapper" id="loginBox">
+            <!-- Left decorative panel -->
+            <div class="login-left">
+                <div class="login-brand">
+                    <div class="login-brand-icon">🔮</div>
+                    <h1>WITCH</h1>
+                    <p>License Management System</p>
+                </div>
+
+                <div class="login-features">
+                    <div class="login-feature">
+                        <div class="login-feature-icon"><i class="fas fa-key"></i></div>
+                        <span>Anlık lisans oluşturma ve yönetim</span>
+                    </div>
+                    <div class="login-feature">
+                        <div class="login-feature-icon"><i class="fas fa-shield-alt"></i></div>
+                        <span>Güvenli donanım kimliği doğrulama</span>
+                    </div>
+                    <div class="login-feature">
+                        <div class="login-feature-icon"><i class="fas fa-chart-line"></i></div>
+                        <span>Gerçek zamanlı analitik ve raporlar</span>
+                    </div>
+                </div>
+
+                <div class="login-version">WITCH v2.0 · STABLE</div>
+            </div>
+
+            <!-- Right form panel -->
+            <div class="login-right">
+                <div class="login-right-title">Hoş geldiniz</div>
+                <div class="login-right-subtitle">Admin paneline erişmek için<br>şifrenizi girin.</div>
+
+                <div class="login-error" id="loginError">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span id="loginErrorText">Hatalı şifre! Tekrar deneyin.</span>
+                </div>
+
+                <div class="login-field">
+                    <label>Şifre</label>
+                    <div class="login-field-inner">
+                        <input type="password" id="loginPassword"
+                            placeholder="••••••••••••"
+                            onkeypress="if(event.key==='Enter') attemptLogin()"
+                            autocomplete="off">
+                        <span class="eye-toggle" onclick="togglePasswordVisibility()">
+                            <i class="fas fa-eye" id="eyeIcon"></i>
+                        </span>
+                    </div>
+                </div>
+
+                <button class="login-btn" onclick="attemptLogin()">
+                    <div class="login-btn-shine"></div>
+                    <i class="fas fa-arrow-right"></i>&nbsp;&nbsp;GİRİŞ YAP
+                </button>
+
+                <div class="login-discord">
+                    Destek için &nbsp;<a href="https://discord.gg/meek.soulition" target="_blank"><i class="fab fa-discord"></i> discord.gg/meek.soulition</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADMIN PANEL -->
+    <div id="adminPanel">
     <!-- Rain Effect Container -->
     <div class="rain" id="rain"></div>
 
@@ -1989,11 +2400,7 @@
         }
 
         // ===== INITIALIZATION =====
-        document.addEventListener('DOMContentLoaded', () => {
-            createRain();
-            init();
-        });
-
+        // Init artık login sonrası çağrılıyor (aşağıdaki login script'inden)
         async function init() {
             showLoading();
             await loadLicenses();
@@ -2937,6 +3344,111 @@
             rainContainer.innerHTML = '';
             rainDrops = [];
             createRain();
+        });
+    </script>
+
+    </div> <!-- /adminPanel -->
+
+    <script>
+        // ===== LOGIN SYSTEM =====
+        // Şifre artık sadece Railway'deki ADMIN_PASSWORD env variable'da tutulur
+        // Ctrl+S yapan biri bu dosyada şifreyi göremez
+
+        async function attemptLogin() {
+            const input = document.getElementById('loginPassword').value;
+            const errorDiv = document.getElementById('loginError');
+            const loginBox = document.getElementById('loginBox');
+            const loginBtn = document.querySelector('.login-btn');
+
+            if (!input) return;
+
+            // Butonu loading yap
+            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Kontrol ediliyor...';
+            loginBtn.disabled = true;
+
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: input })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    sessionStorage.setItem('witch_auth', 'true');
+                    loginBtn.innerHTML = '<i class="fas fa-check"></i> Giriş yapılıyor...';
+                    document.getElementById('loginScreen').style.transition = 'opacity 0.5s ease';
+                    document.getElementById('loginScreen').style.opacity = '0';
+                    setTimeout(() => {
+                        document.getElementById('loginScreen').style.display = 'none';
+                        document.getElementById('adminPanel').style.display = 'block';
+                        createRain();
+                        init();
+                    }, 500);
+                } else {
+                    errorDiv.classList.add('show');
+                    loginBox.classList.add('login-shake');
+                    document.getElementById('loginPassword').value = '';
+                    loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> GİRİŞ YAP';
+                    loginBtn.disabled = false;
+                    setTimeout(() => loginBox.classList.remove('login-shake'), 500);
+                }
+            } catch (e) {
+                errorDiv.querySelector('#loginErrorText').textContent = 'Sunucuya bağlanılamadı!';
+                errorDiv.classList.add('show');
+                loginBox.classList.add('login-shake');
+                loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> GİRİŞ YAP';
+                loginBtn.disabled = false;
+                setTimeout(() => loginBox.classList.remove('login-shake'), 500);
+            }
+        }
+
+        function togglePasswordVisibility() {
+            const input = document.getElementById('loginPassword');
+            const icon = document.getElementById('eyeIcon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'fas fa-eye-slash';
+            } else {
+                input.type = 'password';
+                icon.className = 'fas fa-eye';
+            }
+        }
+
+        function createLoginParticles() {
+            const container = document.getElementById('loginParticles');
+            const colors = ['#a78bfa', '#f472b6', '#2dd4bf', '#c4b5fd'];
+            for (let i = 0; i < 25; i++) {
+                const p = document.createElement('div');
+                p.className = 'login-particle';
+                p.style.cssText = `
+                    left: ${Math.random() * 100}%;
+                    animation-duration: ${Math.random() * 8 + 6}s;
+                    animation-delay: ${Math.random() * 8}s;
+                    background: ${colors[Math.floor(Math.random() * colors.length)]};
+                    width: ${Math.random() < 0.3 ? 3 : 2}px;
+                    height: ${Math.random() < 0.3 ? 3 : 2}px;
+                `;
+                container.appendChild(p);
+            }
+        }
+
+        function createLoginRain() {
+            // kept for compatibility, particles used instead
+            createLoginParticles();
+            const container = document.getElementById('loginParticles');
+            // particles already created above
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            createLoginRain();
+            if (sessionStorage.getItem('witch_auth') === 'true') {
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('adminPanel').style.display = 'block';
+                createRain();
+                init();
+            }
         });
     </script>
 </body>

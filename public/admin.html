@@ -1904,6 +1904,131 @@
             80% { transform: translateX(5px); }
         }
 
+
+        /* ===== MUSIC PLAYER ===== */
+        .music-control {
+            position: fixed;
+            top: 24px;
+            left: 24px;
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(10, 5, 25, 0.85);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(167,139,250,0.2);
+            border-radius: 50px;
+            padding: 10px 18px 10px 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(167,139,250,0.05);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            animation: loginEntrance 1s ease 0.5s backwards;
+        }
+        .music-control:hover {
+            border-color: rgba(167,139,250,0.4);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 20px rgba(167,139,250,0.15);
+        }
+
+        .music-toggle-btn {
+            width: 36px; height: 36px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border: none;
+            border-radius: 50%;
+            color: #030014;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(167,139,250,0.4);
+        }
+        .music-toggle-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(167,139,250,0.5);
+        }
+        .music-toggle-btn.playing {
+            animation: musicPulse 2s ease-in-out infinite;
+        }
+        @keyframes musicPulse {
+            0%, 100% { box-shadow: 0 4px 12px rgba(167,139,250,0.4); }
+            50% { box-shadow: 0 4px 20px rgba(167,139,250,0.7), 0 0 30px rgba(167,139,250,0.3); }
+        }
+
+        .music-slider-wrap {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 130px;
+            transition: all 0.4s ease;
+        }
+        .music-slider-wrap.hidden {
+            width: 0;
+            overflow: hidden;
+            opacity: 0;
+            gap: 0;
+        }
+
+        .music-vol-icon {
+            font-size: 13px;
+            color: rgba(167,139,250,0.7);
+            flex-shrink: 0;
+        }
+
+        .music-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 3px;
+            border-radius: 3px;
+            background: rgba(167,139,250,0.15);
+            outline: none;
+            cursor: pointer;
+            position: relative;
+        }
+        .music-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 14px; height: 14px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(167,139,250,0.5);
+            transition: transform 0.2s ease;
+        }
+        .music-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.3);
+        }
+        .music-slider::-moz-range-thumb {
+            width: 14px; height: 14px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 8px rgba(167,139,250,0.5);
+        }
+
+        /* Equalizer bars animation */
+        .music-eq {
+            display: none;
+            align-items: flex-end;
+            gap: 2px;
+            height: 16px;
+            margin-left: 2px;
+        }
+        .music-eq.active { display: flex; }
+        .music-eq-bar {
+            width: 3px;
+            background: linear-gradient(to top, var(--primary), var(--secondary));
+            border-radius: 2px;
+            animation: eqBounce 0.8s ease-in-out infinite;
+        }
+        .music-eq-bar:nth-child(1) { animation-delay: 0s; animation-duration: 0.7s; }
+        .music-eq-bar:nth-child(2) { animation-delay: 0.15s; animation-duration: 0.9s; }
+        .music-eq-bar:nth-child(3) { animation-delay: 0.05s; animation-duration: 0.6s; }
+        @keyframes eqBounce {
+            0%, 100% { height: 4px; }
+            50% { height: 14px; }
+        }
+
         #adminPanel { display: none; }
 
         @media (max-width: 700px) {
@@ -1916,6 +2041,30 @@
 <body>
     <!-- LOGIN SCREEN -->
     <div id="loginScreen">
+        <!-- Audio -->
+        <audio id="bgMusic" loop preload="auto">
+            <source src="/background.mp3" type="audio/mpeg">
+        </audio>
+
+        <!-- Music Control -->
+        <div class="music-control" id="musicControl">
+            <button class="music-toggle-btn" id="musicBtn" onclick="toggleMusic()" title="Müzik aç/kapat">
+                <i class="fas fa-play" id="musicIcon"></i>
+            </button>
+            <div class="music-eq" id="musicEq">
+                <div class="music-eq-bar" style="height:6px"></div>
+                <div class="music-eq-bar" style="height:10px"></div>
+                <div class="music-eq-bar" style="height:4px"></div>
+            </div>
+            <div class="music-slider-wrap" id="musicSliderWrap">
+                <i class="fas fa-volume-down music-vol-icon"></i>
+                <input type="range" class="music-slider" id="volumeSlider"
+                    min="0" max="100" value="40"
+                    oninput="setVolume(this.value)"
+                    title="Ses seviyesi">
+            </div>
+        </div>
+
         <!-- Background effects -->
         <div class="login-orb login-orb-1"></div>
         <div class="login-orb login-orb-2"></div>
@@ -1980,7 +2129,7 @@
                 </button>
 
                 <div class="login-discord">
-                    Destek için &nbsp;<a href="https://discord.com/users/witchh1" target="_blank"><i class="fab fa-discord"></i> https://discord.gg/meek.soulition</a>
+                    Destek için &nbsp;<a href="https://discord.gg/meek.soulition" target="_blank"><i class="fab fa-discord"></i> discord.gg/meek.soulition</a>
                 </div>
             </div>
         </div>
@@ -3443,6 +3592,7 @@
 
         window.addEventListener('DOMContentLoaded', () => {
             createLoginRain();
+            updateSliderFill(40);
             if (sessionStorage.getItem('witch_auth') === 'true') {
                 document.getElementById('loginScreen').style.display = 'none';
                 document.getElementById('adminPanel').style.display = 'block';
@@ -3450,6 +3600,69 @@
                 init();
             }
         });
+
+        // ===== MUSIC PLAYER =====
+        let musicPlaying = false;
+        let musicStarted = false;
+
+        function toggleMusic() {
+            const audio = document.getElementById('bgMusic');
+            const btn = document.getElementById('musicBtn');
+            const icon = document.getElementById('musicIcon');
+            const eq = document.getElementById('musicEq');
+
+            if (musicPlaying) {
+                audio.pause();
+                btn.classList.remove('playing');
+                icon.className = 'fas fa-play';
+                eq.classList.remove('active');
+                musicPlaying = false;
+            } else {
+                audio.play().then(() => {
+                    btn.classList.add('playing');
+                    icon.className = 'fas fa-pause';
+                    eq.classList.add('active');
+                    musicPlaying = true;
+                    musicStarted = true;
+                }).catch(() => {});
+            }
+        }
+
+        function setVolume(val) {
+            const audio = document.getElementById('bgMusic');
+            audio.volume = val / 100;
+            updateSliderFill(val);
+            const volIcon = document.querySelector('.music-vol-icon');
+            if (val == 0) volIcon.className = 'fas fa-volume-mute music-vol-icon';
+            else if (val < 50) volIcon.className = 'fas fa-volume-down music-vol-icon';
+            else volIcon.className = 'fas fa-volume-up music-vol-icon';
+        }
+
+        function updateSliderFill(val) {
+            const slider = document.getElementById('volumeSlider');
+            if (slider) {
+                const pct = val + '%';
+                slider.style.background = `linear-gradient(to right, #a78bfa ${pct}, rgba(167,139,250,0.15) ${pct})`;
+            }
+        }
+
+        // Auto-play on first user interaction
+        document.addEventListener('click', function autoPlay() {
+            if (!musicStarted) {
+                const audio = document.getElementById('bgMusic');
+                if (audio) {
+                    audio.volume = 0.4;
+                    audio.play().then(() => {
+                        document.getElementById('musicBtn').classList.add('playing');
+                        document.getElementById('musicIcon').className = 'fas fa-pause';
+                        document.getElementById('musicEq').classList.add('active');
+                        musicPlaying = true;
+                        musicStarted = true;
+                    }).catch(() => {});
+                }
+            }
+            document.removeEventListener('click', autoPlay);
+        }, { once: true });
     </script>
 </body>
 </html>

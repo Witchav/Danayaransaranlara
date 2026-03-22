@@ -10,12 +10,11 @@ app.use(express.json());
 app.use(cors());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// LOCAL MongoDB bağlantısı
-// YENİ
+// MongoDB bağlantısı
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/license_db';
 const PORT = process.env.PORT || 3000;
 
-console.log('🔄 MongoDB\'ye bağlanıyor:', MONGODB_URI);
+console.log('🔄 MongoDB\'ye bağlanıyor...');
 
 mongoose.connect(MONGODB_URI, {
     useNewUrlParser: true,
@@ -42,16 +41,28 @@ const License = mongoose.model('License', licenseSchema);
 
 // Anahtar oluşturma
 function generateLicenseKey() {
-    return 'WITCH-' + crypto.randomBytes(4).toString('hex').toUpperCase() + 
-           '-' + crypto.randomBytes(4).toString('hex').toUpperCase() + 
+    return 'WITCH-' + crypto.randomBytes(4).toString('hex').toUpperCase() +
+           '-' + crypto.randomBytes(4).toString('hex').toUpperCase() +
            '-' + crypto.randomBytes(4).toString('hex').toUpperCase();
 }
+
+// ===== ADMIN LOGIN =====
+app.post('/api/login', (req, res) => {
+    const { password } = req.body;
+    const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'witch2024';
+
+    if (password === ADMIN_PASSWORD) {
+        res.json({ success: true });
+    } else {
+        res.status(401).json({ success: false, message: 'Hatalı şifre' });
+    }
+});
 
 // Yeni lisans oluşturma
 app.post('/api/generate-license', async (req, res) => {
     try {
         const { days, maxUses } = req.body;
-        
+
         if (!days) {
             return res.status(400).json({ error: 'Gün sayısı gerekli' });
         }
@@ -67,7 +78,7 @@ app.post('/api/generate-license', async (req, res) => {
         });
 
         await license.save();
-        
+
         res.json({
             success: true,
             key,
@@ -85,17 +96,16 @@ app.post('/api/generate-license', async (req, res) => {
 app.delete('/api/license/:key', async (req, res) => {
     try {
         const { key } = req.params;
-        
         const result = await License.findOneAndDelete({ key });
-        
+
         if (!result) {
             return res.status(404).json({ error: 'Lisans bulunamadı' });
         }
-        
-        res.json({ 
-            success: true, 
+
+        res.json({
+            success: true,
             message: 'Lisans başarıyla silindi',
-            deletedKey: key 
+            deletedKey: key
         });
     } catch (error) {
         console.error('❌ Silme hatası:', error);
@@ -103,24 +113,20 @@ app.delete('/api/license/:key', async (req, res) => {
     }
 });
 
-// TOPLU LİSANS SİLME (Tümünü sil)
+// TOPLU LİSANS SİLME
 app.delete('/api/licenses', async (req, res) => {
     try {
-        const { status } = req.query; // ?status=expired veya ?status=all
-        
+        const { status } = req.query;
         let filter = {};
-        
+
         if (status === 'expired') {
-            // Süresi dolmuş lisansları bul
-            filter = {
-                expiresAt: { $lt: new Date() }
-            };
+            filter = { expiresAt: { $lt: new Date() } };
         }
-        
+
         const result = await License.deleteMany(filter);
-        
-        res.json({ 
-            success: true, 
+
+        res.json({
+            success: true,
             message: `${result.deletedCount} lisans silindi`,
             deletedCount: result.deletedCount
         });
@@ -130,26 +136,21 @@ app.delete('/api/licenses', async (req, res) => {
     }
 });
 
-// LİSANS PASİF YAP (Silmeden devre dışı bırak)
+// LİSANS PASİF YAP
 app.patch('/api/license/:key/deactivate', async (req, res) => {
     try {
         const { key } = req.params;
-        
         const license = await License.findOneAndUpdate(
             { key },
             { isActive: false },
             { new: true }
         );
-        
+
         if (!license) {
             return res.status(404).json({ error: 'Lisans bulunamadı' });
         }
-        
-        res.json({ 
-            success: true, 
-            message: 'Lisans pasifleştirildi',
-            license 
-        });
+
+        res.json({ success: true, message: 'Lisans pasifleştirildi', license });
     } catch (error) {
         console.error('❌ Pasifleştirme hatası:', error);
         res.status(500).json({ error: error.message });
@@ -160,22 +161,17 @@ app.patch('/api/license/:key/deactivate', async (req, res) => {
 app.patch('/api/license/:key/activate', async (req, res) => {
     try {
         const { key } = req.params;
-        
         const license = await License.findOneAndUpdate(
             { key },
             { isActive: true },
             { new: true }
         );
-        
+
         if (!license) {
             return res.status(404).json({ error: 'Lisans bulunamadı' });
         }
-        
-        res.json({ 
-            success: true, 
-            message: 'Lisans aktifleştirildi',
-            license 
-        });
+
+        res.json({ success: true, message: 'Lisans aktifleştirildi', license });
     } catch (error) {
         console.error('❌ Aktifleştirme hatası:', error);
         res.status(500).json({ error: error.message });
@@ -186,7 +182,6 @@ app.patch('/api/license/:key/activate', async (req, res) => {
 app.post('/api/verify-license', async (req, res) => {
     try {
         const { key, hardwareId } = req.body;
-
         const license = await License.findOne({ key });
 
         if (!license) {
@@ -212,8 +207,8 @@ app.post('/api/verify-license', async (req, res) => {
         license.usedBy = hardwareId || 'unknown';
         await license.save();
 
-        res.json({ 
-            valid: true, 
+        res.json({
+            valid: true,
             expiresAt: license.expiresAt,
             remainingUses: license.maxUses - license.currentUses
         });
@@ -234,8 +229,8 @@ app.get('/api/licenses', async (req, res) => {
 
 // Test endpoint'i
 app.get('/api/test', (req, res) => {
-    res.json({ 
-        status: 'OK', 
+    res.json({
+        status: 'OK',
         message: 'Sunucu çalışıyor',
         mongodb: mongoose.connection.readyState === 1 ? 'bağlı' : 'bağlı değil'
     });
@@ -245,7 +240,6 @@ app.get('/api/test', (req, res) => {
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
-
 
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`\n🚀 Lisans sunucusu başlatıldı!`);

@@ -2049,7 +2049,7 @@
     <div id="loginScreen">
         <!-- Audio -->
         <audio id="bgMusic" loop preload="auto">
-            <source src="/background.mp3" type="audio/mpeg">
+            <source src="https://files.catbox.moe/bq6jfr.mp3" type="audio/mpeg">
         </audio>
 
         <!-- Music Control -->
@@ -3609,6 +3609,37 @@
 
         // ===== MUSIC PLAYER =====
         let musicPlaying = false;
+        let autoStarted = false;
+
+        // Sayfa açılır açılmaz müziği hazırla, ilk tıklamada başlat
+        window.addEventListener('DOMContentLoaded', () => {
+            const audio = document.getElementById('bgMusic');
+            audio.volume = 0;
+            audio.play().then(() => {
+                // Sessizce başlatıldı, ses açık konuma getir
+                audio.volume = document.getElementById('volumeSlider').value / 100;
+                document.getElementById('musicBtn').classList.add('playing');
+                document.getElementById('musicIcon').className = 'fas fa-pause';
+                document.getElementById('musicEq').classList.add('active');
+                musicPlaying = true;
+                autoStarted = true;
+            }).catch(() => {
+                // Tarayıcı engelledi, ilk tıklamada başlat
+                document.addEventListener('click', function startOnClick() {
+                    if (!autoStarted) {
+                        audio.volume = document.getElementById('volumeSlider').value / 100;
+                        audio.play().then(() => {
+                            document.getElementById('musicBtn').classList.add('playing');
+                            document.getElementById('musicIcon').className = 'fas fa-pause';
+                            document.getElementById('musicEq').classList.add('active');
+                            musicPlaying = true;
+                            autoStarted = true;
+                        }).catch(() => {});
+                    }
+                    document.removeEventListener('click', startOnClick);
+                });
+            });
+        });
 
         function toggleMusic() {
             const audio = document.getElementById('bgMusic');
@@ -3629,9 +3660,7 @@
                     icon.className = 'fas fa-pause';
                     eq.classList.add('active');
                     musicPlaying = true;
-                }).catch(e => {
-                    console.log('Müzik oynatma hatası:', e);
-                });
+                }).catch(() => {});
             }
         }
 

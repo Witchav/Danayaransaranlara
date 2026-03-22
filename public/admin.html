@@ -1957,14 +1957,20 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            width: 130px;
-            transition: all 0.4s ease;
-        }
-        .music-slider-wrap.hidden {
             width: 0;
             overflow: hidden;
             opacity: 0;
-            gap: 0;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .music-control:hover .music-slider-wrap {
+            width: 130px;
+            opacity: 1;
+            overflow: visible;
+        }
+        .music-slider-wrap.hidden {
+            width: 0 !important;
+            overflow: hidden !important;
+            opacity: 0 !important;
         }
 
         .music-vol-icon {
@@ -3603,7 +3609,6 @@
 
         // ===== MUSIC PLAYER =====
         let musicPlaying = false;
-        let musicStarted = false;
 
         function toggleMusic() {
             const audio = document.getElementById('bgMusic');
@@ -3618,13 +3623,15 @@
                 eq.classList.remove('active');
                 musicPlaying = false;
             } else {
+                audio.volume = document.getElementById('volumeSlider').value / 100;
                 audio.play().then(() => {
                     btn.classList.add('playing');
                     icon.className = 'fas fa-pause';
                     eq.classList.add('active');
                     musicPlaying = true;
-                    musicStarted = true;
-                }).catch(() => {});
+                }).catch(e => {
+                    console.log('Müzik oynatma hatası:', e);
+                });
             }
         }
 
@@ -3645,24 +3652,6 @@
                 slider.style.background = `linear-gradient(to right, #a78bfa ${pct}, rgba(167,139,250,0.15) ${pct})`;
             }
         }
-
-        // Auto-play on first user interaction
-        document.addEventListener('click', function autoPlay() {
-            if (!musicStarted) {
-                const audio = document.getElementById('bgMusic');
-                if (audio) {
-                    audio.volume = 0.4;
-                    audio.play().then(() => {
-                        document.getElementById('musicBtn').classList.add('playing');
-                        document.getElementById('musicIcon').className = 'fas fa-pause';
-                        document.getElementById('musicEq').classList.add('active');
-                        musicPlaying = true;
-                        musicStarted = true;
-                    }).catch(() => {});
-                }
-            }
-            document.removeEventListener('click', autoPlay);
-        }, { once: true });
     </script>
 </body>
 </html>

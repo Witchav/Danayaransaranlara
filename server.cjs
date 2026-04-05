@@ -3,9 +3,6 @@ const mongoose = require('mongoose');
 const crypto = require('crypto');
 const cors = require('cors');
 const path = require('path');
-const fs = require('fs');
-const multer = require('multer');
-
 const app = express();
 
 // Middleware
@@ -13,75 +10,19 @@ app.use(express.json());
 app.use(cors());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// ================== UPLOAD SYSTEM ==================
-const uploadDir = path.join(__dirname, "uploads");
-
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir);
-}
-
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, uploadDir);
-    },
-    filename: (req, file, cb) => {
-        const id = crypto.randomUUID();
-        cb(null, id + ".zip");
-    }
-});
-
-const upload = multer({ storage });
-
-// UPLOAD ENDPOINT
-app.post("/upload", upload.single("file"), (req, res) => {
-    if (!req.file) {
-        return res.status(400).json({ error: "no file" });
-    }
-
-    const fileName = req.file.filename;
-
-    res.json({
-        success: true,
-        url: `https://witchlicense-production.up.railway.app/download/${fileName}`
-    });
-});
-
-// DOWNLOAD ENDPOINT
-app.get("/download/:file", (req, res) => {
-    const filePath = path.join(uploadDir, req.params.file);
-
-    if (!fs.existsSync(filePath)) {
-        return res.status(404).send("Not found");
-    }
-
-    res.download(filePath);
-});
-
-// AUTO DELETE (1 saat sonra sil)
-setInterval(() => {
-    const files = fs.readdirSync(uploadDir);
-
-    files.forEach(file => {
-        const filePath = path.join(uploadDir, file);
-        const stats = fs.statSync(filePath);
-
-        const age = Date.now() - stats.mtimeMs;
-
-        if (age > 60 * 60 * 1000) {
-            fs.unlinkSync(filePath);
-        }
-    });
-}, 10 * 60 * 1000);
-
-// ================== NORMAL SİSTEM ==================
-
+// MongoDB bağlantısı
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/license_db';
 const PORT = process.env.PORT || 3000;
 
-mongoose.connect(MONGODB_URI).then(() => {
+console.log('🔄 MongoDB\'ye bağlanıyor...');
+
+mongoose.connect(MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+}).then(() => {
     console.log('✅ MongoDB bağlantısı başarılı!');
 }).catch(err => {
-    console.error('❌ MongoDB hata!', err.message);
+    console.error('❌ MongoDB bağlantı hatası!', err.message);
 });
 
 // Lisans şeması
@@ -98,14 +39,14 @@ const licenseSchema = new mongoose.Schema({
 
 const License = mongoose.model('License', licenseSchema);
 
-// Key üret
+// Anahtar oluşturma
 function generateLicenseKey() {
     return 'WITCH-' + crypto.randomBytes(4).toString('hex').toUpperCase() +
            '-' + crypto.randomBytes(4).toString('hex').toUpperCase() +
            '-' + crypto.randomBytes(4).toString('hex').toUpperCase();
 }
 
-// LOGIN
+// ===== ADMIN LOGIN =====
 app.post('/api/login', (req, res) => {
     const { password } = req.body;
     const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'witch2024';
@@ -113,14 +54,18 @@ app.post('/api/login', (req, res) => {
     if (password === ADMIN_PASSWORD) {
         res.json({ success: true });
     } else {
-        res.status(401).json({ success: false });
+        res.status(401).json({ success: false, message: 'Hatalı şifre' });
     }
 });
 
-// LICENSE CREATE
+// Yeni lisans oluşturma
 app.post('/api/generate-license', async (req, res) => {
     try {
         const { days, maxUses } = req.body;
+
+        if (!days) {
+            return res.status(400).json({ error: 'Gün sayısı gerekli' });
+        }
 
         const key = generateLicenseKey();
         const expiresAt = new Date();
@@ -134,37 +79,170 @@ app.post('/api/generate-license', async (req, res) => {
 
         await license.save();
 
-        res.json({ success: true, key, expiresAt });
-
-    } catch (e) {
-        res.status(500).json({ error: e.message });
+        res.json({
+            success: true,
+            key,
+            expiresAt,
+            days,
+            message: `${days} günlük lisans oluşturuldu`
+        });
+    } catch (error) {
+        console.error('❌ Hata:', error);
+        res.status(500).json({ error: error.message });
     }
 });
 
-// VERIFY
+// TEKLİ LİSANS SİLME
+app.delete('/api/license/:key', async (req, res) => {
+    try {
+        const { key } = req.params;
+        const result = await License.findOneAndDelete({ key });
+
+        if (!result) {
+            return res.status(404).json({ error: 'Lisans bulunamadı' });
+        }
+
+        res.json({
+            success: true,
+            message: 'Lisans başarıyla silindi',
+            deletedKey: key
+        });
+    } catch (error) {
+        console.error('❌ Silme hatası:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// TOPLU LİSANS SİLME
+app.delete('/api/licenses', async (req, res) => {
+    try {
+        const { status } = req.query;
+        let filter = {};
+
+        if (status === 'expired') {
+            filter = { expiresAt: { $lt: new Date() } };
+        }
+
+        const result = await License.deleteMany(filter);
+
+        res.json({
+            success: true,
+            message: `${result.deletedCount} lisans silindi`,
+            deletedCount: result.deletedCount
+        });
+    } catch (error) {
+        console.error('❌ Toplu silme hatası:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// LİSANS PASİF YAP
+app.patch('/api/license/:key/deactivate', async (req, res) => {
+    try {
+        const { key } = req.params;
+        const license = await License.findOneAndUpdate(
+            { key },
+            { isActive: false },
+            { new: true }
+        );
+
+        if (!license) {
+            return res.status(404).json({ error: 'Lisans bulunamadı' });
+        }
+
+        res.json({ success: true, message: 'Lisans pasifleştirildi', license });
+    } catch (error) {
+        console.error('❌ Pasifleştirme hatası:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// LİSANS AKTİF YAP
+app.patch('/api/license/:key/activate', async (req, res) => {
+    try {
+        const { key } = req.params;
+        const license = await License.findOneAndUpdate(
+            { key },
+            { isActive: true },
+            { new: true }
+        );
+
+        if (!license) {
+            return res.status(404).json({ error: 'Lisans bulunamadı' });
+        }
+
+        res.json({ success: true, message: 'Lisans aktifleştirildi', license });
+    } catch (error) {
+        console.error('❌ Aktifleştirme hatası:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Lisans doğrulama
 app.post('/api/verify-license', async (req, res) => {
-    const { key } = req.body;
-    const license = await License.findOne({ key });
+    try {
+        const { key, hardwareId } = req.body;
+        const license = await License.findOne({ key });
 
-    if (!license) return res.json({ valid: false });
+        if (!license) {
+            return res.json({ valid: false, reason: 'Lisans bulunamadı' });
+        }
 
-    if (new Date() > license.expiresAt) {
-        return res.json({ valid: false });
+        if (!license.isActive) {
+            return res.json({ valid: false, reason: 'Lisans pasif' });
+        }
+
+        if (new Date() > license.expiresAt) {
+            license.isActive = false;
+            await license.save();
+            return res.json({ valid: false, reason: 'Lisans süresi doldu' });
+        }
+
+        if (license.currentUses >= license.maxUses) {
+            return res.json({ valid: false, reason: 'Maksimum kullanım sayısına ulaşıldı' });
+        }
+
+        license.currentUses += 1;
+        license.lastUsed = new Date();
+        license.usedBy = hardwareId || 'unknown';
+        await license.save();
+
+        res.json({
+            valid: true,
+            expiresAt: license.expiresAt,
+            remainingUses: license.maxUses - license.currentUses
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
-
-    res.json({ valid: true });
 });
 
-// TEST
+// Tüm lisansları getir
+app.get('/api/licenses', async (req, res) => {
+    try {
+        const licenses = await License.find().sort({ createdAt: -1 });
+        res.json(licenses);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Test endpoint'i
 app.get('/api/test', (req, res) => {
-    res.json({ status: 'OK' });
+    res.json({
+        status: 'OK',
+        message: 'Sunucu çalışıyor',
+        mongodb: mongoose.connection.readyState === 1 ? 'bağlı' : 'bağlı değil'
+    });
 });
 
-// ANA SAYFA
+// Ana sayfa
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Server çalışıyor: ${PORT}`);
+    console.log(`\n🚀 Lisans sunucusu başlatıldı!`);
+    console.log(`📱 Adres: http://localhost:${PORT}`);
+    console.log(`📁 Admin panel: http://localhost:${PORT}`);
 });
